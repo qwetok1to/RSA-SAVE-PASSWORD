@@ -28,53 +28,34 @@ public class Controller{
      Servise s;
     
     KeyPair k; 
- 
-    public Controller(Servise s) {
-        try{
-        k=s.generateKeyPair();
-        }catch(Exception e){
 
+
+       @PostMapping("/add_password")
+    public ResponseEntity<String> login(@RequestBody DTO dto) {
+            try {
+            String pass = s.encrypt(dto.password, s.getPublicKey());
+            db.savePassword(pass, dto.userId, dto.name_password);
+            return ResponseEntity.ok(pass);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body("error: " + e.getMessage());
         }
     }
-      
- 
 
-   
-    @PostMapping("/add_password")
-     public ResponseEntity<String> login( @RequestBody DTO dto){
-        String pass="";
-       
-        try{
-
-   
-          pass =s.encrypt(dto.password, k.getPublic());
-          System.out.println("Encrypted password: " + pass);
-          db.savePassword(pass, dto.userId, dto.name_password);
-          
-          
-          return ResponseEntity.ok(pass);
-        }catch(Exception e){
-            System.out.print("error" + e );    
-            
+    @PostMapping("/get_password")
+    public ResponseEntity<List<DTO_Response>> postMethodName(@RequestBody DTO dto) {
+        if (dto == null || dto.userId == null || dto.userId.isBlank()) {
+            return ResponseEntity.badRequest().body(null);
         }
-         return  ResponseEntity.badRequest().body("error: ");
-     }
-     @PostMapping("/get_password")
-     public ResponseEntity< List<DTO_Response>>postMethodName(@RequestBody DTO dto  ) {
-      
-     try {
-        List<DTO_Response> passwords = db.getAllPasswordsByUser(dto.userId, k.getPrivate());
-        return ResponseEntity.ok(passwords);
-    } catch (Exception e) {
-        System.out.print("error" + e);
-        return ResponseEntity.badRequest().body(null);
+
+        try {
+            List<DTO_Response> passwords = db.getAllPasswordsByUser(dto.userId, s.getPrivateKey());
+            return ResponseEntity.ok(passwords);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body(null);
+        }
     }
-        
-         
-         
-     
-    }
-    
      
 
 
